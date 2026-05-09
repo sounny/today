@@ -52,10 +52,7 @@
         navDeaths: document.getElementById('nav-deaths'),
         timelineContainer: document.getElementById('timeline-container'),
         sectionTitle: document.getElementById('section-title'),
-        statTotalVal: document.getElementById('stat-total-val'),
-        statSpanVal: document.getElementById('stat-span-val'),
-        statArticlesVal: document.getElementById('stat-articles-val'),
-        statTypeVal: document.getElementById('stat-type-val'),
+        heroEventContainer: document.getElementById('hero-event-container'),
     };
 
     // ---- Initialization ----
@@ -195,12 +192,7 @@
         dom.heroDate.textContent = dateStr;
         dom.headerSub.textContent = dateStr;
 
-        const subtitles = {
-            events: 'The most significant moments that shaped our world on this day.',
-            births: 'Remarkable individuals born on this day who left their mark.',
-            deaths: 'Remembering notable figures who passed on this day.',
-        };
-        dom.heroSubtitle.textContent = subtitles[state.category];
+        dom.headerSub.textContent = dateStr;
     }
 
     // ---- Loading / Error States ----
@@ -221,9 +213,7 @@
                 <button class="retry-btn" onclick="location.reload()">Retry</button>
             </div>
         `;
-        dom.statTotalVal.textContent = '--';
-        dom.statSpanVal.textContent = '--';
-        dom.statArticlesVal.textContent = '--';
+        dom.heroEventContainer.innerHTML = '';
     }
 
     // ---- Render Timeline ----
@@ -238,35 +228,112 @@
                     <p>Wikipedia doesn't have highlighted ${state.category} for this date.</p>
                 </div>
             `;
-            dom.statTotalVal.textContent = '0';
-            dom.statSpanVal.textContent = '--';
-            dom.statArticlesVal.textContent = '--';
+            dom.heroEventContainer.innerHTML = '';
             return;
         }
 
         // Sort by year
         items.sort((a, b) => (a.year || 0) - (b.year || 0));
 
+        // Find Hero Event (event with image and most pages)
+        let heroEvent = null;
+        const itemsWithImages = items.filter(e => findBestImage(e.pages));
+        if (itemsWithImages.length > 0) {
+            itemsWithImages.sort((a, b) => (b.pages?.length || 0) - (a.pages?.length || 0));
+            heroEvent = itemsWithImages[0];
+        } else if (items.length > 0) {
+            const sortedByPages = [...items].sort((a, b) => (b.pages?.length || 0) - (a.pages?.length || 0));
+            heroEvent = sortedByPages[0];
+        }
+
+        dom.heroEventContainer.innerHTML = '';
+        if (heroEvent) {
+            dom.heroEventContainer.appendChild(createHeroCard(heroEvent));
+            items = items.filter(e => e !== heroEvent);
+        }
+
         // Pick 5 spread across the timeline
         const selected = selectNotable(items, 5);
-
-        // Update stats
-        dom.statTotalVal.textContent = items.length.toLocaleString();
-        const years = items.map(e => e.year).filter(y => y != null);
-        if (years.length > 0) {
-            const span = Math.max(...years) - Math.min(...years);
-            dom.statSpanVal.textContent = span.toLocaleString() + '+';
-        }
-        // Count total articles across all items
-        const totalArticles = items.reduce((sum, e) => sum + (e.pages ? e.pages.length : 0), 0);
-        dom.statArticlesVal.textContent = totalArticles.toLocaleString();
-        dom.statTypeVal.textContent = state.category.charAt(0).toUpperCase() + state.category.slice(1);
 
         // Build timeline
         dom.timelineContainer.innerHTML = '';
         selected.forEach((event, index) => {
             dom.timelineContainer.appendChild(createTimelineEvent(event, index));
         });
+    }
+
+    function createHeroCard(event) {
+        const card = document.createElement('div');
+        card.className = 'tl-card hero-card';
+
+        const year = event.year;
+        const currentYear = new Date().getFullYear();
+        const yearsAgo = year != null ? currentYear - year : null;
+
+        const imgData = findBestImage(event.pages);
+
+        // Image section
+        if (imgData) {
+            const imgWrap = document.createElement('div');
+            imgWrap.className = 'tl-card-img-wrap hero-img-wrap';
+
+            const img = document.createElement('img');
+            img.className = 'tl-card-img';
+            img.src = imgData.url;
+            img.alt = imgData.title || 'Historical image';
+            img.loading = 'lazy';
+            img.onerror = function () {
+                this.parentElement.style.display = 'none';
+            };
+
+            imgWrap.appendChild(img);
+            card.appendChild(imgWrap);
+        }
+
+        // Card body
+        const body = document.createElement('div');
+        body.className = 'tl-card-body';
+        
+        // Add Year info to hero body
+        const yearWrap = document.createElement('div');
+        yearWrap.className = 'hero-year-wrap';
+        yearWrap.innerHTML = \`
+            <span class="hero-year-num">\${year != null ? Math.abs(year) : '?'}</span>
+            \${year != null ? \`<span class="hero-year-era">\${year < 0 ? 'BCE' : 'CE'}</span>\` : ''}
+            \${yearsAgo != null && yearsAgo > 0 ? \`<span class="hero-years-ago">&bull; \${yearsAgo} yrs ago</span>\` : ''}
+        \`;
+        body.appendChild(yearWrap);
+
+        const text = document.createElement('div');
+        text.className = 'tl-card-text hero-text';
+        text.textContent = event.text || 'No description available.';
+        body.appendChild(text);
+
+        // Links
+        if (event.pages && event.pages.length > 0) {
+            const links = document.createElement('div');
+            links.className = 'tl-card-links';
+            event.pages.slice(0, 4).forEach(page => {
+                const a = document.createElement('a');
+                a.className = 'tl-link';
+                a.href = page.content_urls?.desktop?.page || '#';
+                a.target = '_blank';
+                a.rel = 'noopener';
+                a.innerHTML = \`
+                    \${page.titles?.normalized || page.title}
+                    <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                \`;
+                links.appendChild(a);
+            });
+            body.appendChild(links);
+        }
+
+        card.appendChild(body);
+        return card;
     }
 
     function selectNotable(items, count) {
