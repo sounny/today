@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Today in History | Daily Historical Events</title>
+    <meta name="description" content="Explore major historical events that happened on any day of the year. Powered by Wikipedia.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header id="app-header">
+        <div class="header-left">
+            <div class="logo-icon" id="logo-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <span class="header-title">Today in History</span>
+            <span class="header-dot">&middot;</span>
+            <span class="header-sub" id="header-sub">Loading...</span>
+        </div>
+        <nav class="header-nav" id="header-nav">
+            <button class="nav-btn active" id="nav-events">Events</button>
+            <button class="nav-btn" id="nav-births">Births</button>
+            <button class="nav-btn" id="nav-deaths">Deaths</button>
+        </nav>
+
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero">
+        <div class="hero-label">
+            <span class="label-dot"></span>
+            HISTORICAL TIMELINE
+        </div>
+        <h1 id="hero-date" class="hero-title">Loading...</h1>
+        <p id="hero-subtitle" class="hero-subtitle">The most significant moments that shaped our world on this day.</p>
+
+        <!-- Date Navigation -->
+        <div class="date-nav" id="date-nav">
+            <button class="date-nav-btn" id="btn-prev" aria-label="Previous day">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+            </button>
+            <div class="date-picker-group">
+                <select id="month-select" class="date-select" aria-label="Select month"></select>
+                <select id="day-select" class="date-select" aria-label="Select day"></select>
+            </div>
+            <button class="date-nav-btn" id="btn-next" aria-label="Next day">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+            </button>
+            <button class="today-btn" id="btn-today">Today</button>
+        </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <section id="stats-bar">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="stat-value" id="stat-total-val">--</div>
+            <div class="stat-label">Total on this day</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="stat-value" id="stat-span-val">--</div>
+            <div class="stat-label">Years of history</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <div class="stat-value" id="stat-articles-val">--</div>
+            <div class="stat-label">Wikipedia articles</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div class="stat-value" id="stat-type-val">Events</div>
+            <div class="stat-label">Viewing</div>
+        </div>
+    </section>
+
+    <!-- Timeline Section -->
+    <section id="timeline-section">
+        <div class="section-header">
+            <h2 id="section-title">Notable Events</h2>
+            <div class="section-line"></div>
+        </div>
+        <div id="timeline-container" class="timeline-container">
+            <div class="loading-state" id="loading-state">
+                <div class="spinner"></div>
+                <p>Fetching historical events...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="app-footer">
+        <p>Data and images sourced from <a href="https://en.wikipedia.org" target="_blank" rel="noopener">Wikipedia</a> via the Wikimedia REST API</p>
+        <p class="footer-sub">Built with curiosity &middot; Today in History</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
