@@ -438,7 +438,27 @@
     }
 
     // ---- Bootstrap ----
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => {
+        init();
+
+        // Scroll features
+        const header = document.getElementById('app-header');
+        const scrollBtn = document.getElementById('scroll-to-top');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+                scrollBtn.classList.add('visible');
+            } else {
+                header.classList.remove('scrolled');
+                scrollBtn.classList.remove('visible');
+            }
+        });
+
+        scrollBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
 
     // Mobile nav
     const nav = document.getElementById('header-nav');
