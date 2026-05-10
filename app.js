@@ -293,11 +293,26 @@
         // Add Year info to hero body
         const yearWrap = document.createElement('div');
         yearWrap.className = 'hero-year-wrap';
-        yearWrap.innerHTML = `
-            <span class="hero-year-num">${year != null ? Math.abs(year) : '?'}</span>
-            ${year != null ? `<span class="hero-year-era">${year < 0 ? 'BCE' : 'CE'}</span>` : ''}
-            ${yearsAgo != null && yearsAgo > 0 ? `<span class="hero-years-ago">&bull; ${yearsAgo} yrs ago</span>` : ''}
-        `;
+
+        const yearNum = document.createElement('span');
+        yearNum.className = 'hero-year-num';
+        yearNum.textContent = year != null ? Math.abs(year) : '?';
+        yearWrap.appendChild(yearNum);
+
+        if (year != null) {
+            const era = document.createElement('span');
+            era.className = 'hero-year-era';
+            era.textContent = year < 0 ? 'BCE' : 'CE';
+            yearWrap.appendChild(era);
+        }
+
+        if (yearsAgo != null && yearsAgo > 0) {
+            const ago = document.createElement('span');
+            ago.className = 'hero-years-ago';
+            ago.innerHTML = '&bull; ' + yearsAgo + ' yrs ago';
+            yearWrap.appendChild(ago);
+        }
+
         body.appendChild(yearWrap);
 
         const text = document.createElement('div');
