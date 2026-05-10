@@ -373,11 +373,25 @@
         // Year column
         const yearCol = document.createElement('div');
         yearCol.className = 'tl-year';
-        yearCol.innerHTML = `
-            <div class="tl-year-num">${year != null ? Math.abs(year) : '?'}</div>
-            ${year != null ? `<div class="tl-year-era">${year < 0 ? 'BCE' : 'CE'}</div>` : ''}
-            ${yearsAgo != null && yearsAgo > 0 ? `<div class="tl-years-ago">${yearsAgo} yrs ago</div>` : ''}
-        `;
+
+        const yearNumDiv = document.createElement('div');
+        yearNumDiv.className = 'tl-year-num';
+        yearNumDiv.textContent = year != null ? Math.abs(year) : '?';
+        yearCol.appendChild(yearNumDiv);
+
+        if (year != null) {
+            const eraDiv = document.createElement('div');
+            eraDiv.className = 'tl-year-era';
+            eraDiv.textContent = year < 0 ? 'BCE' : 'CE';
+            yearCol.appendChild(eraDiv);
+        }
+
+        if (yearsAgo != null && yearsAgo > 0) {
+            const agoDiv = document.createElement('div');
+            agoDiv.className = 'tl-years-ago';
+            agoDiv.textContent = yearsAgo + ' yrs ago';
+            yearCol.appendChild(agoDiv);
+        }
 
         // Card wrap (includes the dot)
         const cardWrap = document.createElement('div');
