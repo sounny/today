@@ -15,6 +15,32 @@
         loading: false,
     };
 
+    // ---- Cache ----
+    const cache = {};
+    const STORAGE_KEY = 'todayInHistory_prefs';
+
+    function savePrefs() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                month: state.month,
+                day: state.day,
+                category: state.category,
+            }));
+        } catch (e) { /* quota exceeded or private mode */ }
+    }
+
+    function loadPrefs() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) return JSON.parse(raw);
+        } catch (e) { /* corrupt data */ }
+        return null;
+    }
+
+    function getCacheKey(month, day) {
+        return month + '/' + day;
+    }
+
     // ---- Constants ----
     const MONTHS = [
         'January', 'February', 'March', 'April', 'May', 'June',
@@ -56,9 +82,22 @@
 
     // ---- Initialization ----
     function init() {
-        const now = new Date();
-        state.month = now.getMonth() + 1;
-        state.day = now.getDate();
+        const saved = loadPrefs();
+        if (saved && saved.month && saved.day) {
+            state.month = saved.month;
+            state.day = saved.day;
+            state.category = saved.category || 'events';
+        } else {
+            const now = new Date();
+            state.month = now.getMonth() + 1;
+            state.day = now.getDate();
+        }
+
+        // Sync category nav button
+        const catMap = { events: dom.navEvents, births: dom.navBirths, deaths: dom.navDeaths };
+        [dom.navEvents, dom.navBirths, dom.navDeaths].forEach(btn => btn.classList.remove('active'));
+        catMap[state.category].classList.add('active');
+        dom.sectionTitle.textContent = CATEGORY_TITLES[state.category];
 
         buildSelectors();
         bindEvents();
@@ -147,6 +186,7 @@
         const map = { events: dom.navEvents, births: dom.navBirths, deaths: dom.navDeaths };
         map[cat].classList.add('active');
         dom.sectionTitle.textContent = CATEGORY_TITLES[cat];
+        savePrefs();
 
         if (state.data) {
             renderTimeline(state.data);
@@ -155,11 +195,22 @@
         }
     }
 
-    // ---- Fetch from Wikipedia API ----
+    // ---- Fetch from Wikipedia API (with cache) ----
     async function fetchEvents() {
         state.loading = true;
         showLoading();
         updateHeroDisplay();
+        savePrefs();
+
+        const key = getCacheKey(state.month, state.day);
+
+        // Check cache first
+        if (cache[key]) {
+            state.data = cache[key];
+            state.loading = false;
+            renderTimeline(cache[key]);
+            return;
+        }
 
         const mm = String(state.month).padStart(2, '0');
         const dd = String(state.day).padStart(2, '0');
@@ -173,6 +224,7 @@
             if (!response.ok) throw new Error(`API returned ${response.status}`);
 
             const data = await response.json();
+            cache[key] = data;
             state.data = data;
             state.loading = false;
             renderTimeline(data);
@@ -199,6 +251,7 @@
                 <p>Discovering historical events...</p>
             </div>
         `;
+        dom.heroEventContainer.innerHTML = '';
     }
 
     function showError(msg) {
@@ -206,10 +259,15 @@
             <div class="error-state">
                 <h3>Unable to Load Events</h3>
                 <p>${msg || 'Something went wrong. Please try again.'}</p>
-                <button class="retry-btn" onclick="location.reload()">Retry</button>
+                <button class="retry-btn" id="retry-btn">Retry</button>
             </div>
         `;
         dom.heroEventContainer.innerHTML = '';
+        
+        const retryBtn = document.getElementById('retry-btn');
+        if (retryBtn) {
+            retryBtn.addEventListener('click', fetchEvents);
+        }
     }
 
     // ---- Render Timeline ----
@@ -254,13 +312,17 @@
         // Build timeline
         dom.timelineContainer.innerHTML = '';
         selected.forEach((event, index) => {
-            dom.timelineContainer.appendChild(createTimelineEvent(event, index));
+            const eventEl = createTimelineEvent(event, index);
+            eventEl.style.animationDelay = `${0.1 + index * 0.1}s`;
+            dom.timelineContainer.appendChild(eventEl);
         });
     }
 
     function createHeroCard(event) {
         const card = document.createElement('div');
         card.className = 'tl-card hero-card';
+        card.setAttribute('role', 'article');
+        card.setAttribute('aria-label', 'Featured historical event: ' + (event.text || '').substring(0, 80));
 
         const year = event.year;
         const currentYear = new Date().getFullYear();
@@ -269,22 +331,23 @@
         const imgData = findBestImage(event.pages);
 
         // Image section
-        if (imgData) {
-            const imgWrap = document.createElement('div');
-            imgWrap.className = 'tl-card-img-wrap hero-img-wrap';
+        const imgWrap = document.createElement('div');
+        imgWrap.className = 'tl-card-img-wrap hero-img-wrap';
 
+        if (imgData) {
             const img = document.createElement('img');
             img.className = 'tl-card-img';
             img.src = imgData.url;
             img.alt = imgData.title || 'Historical image';
             img.loading = 'lazy';
             img.onerror = function () {
-                this.parentElement.style.display = 'none';
+                this.parentElement.innerHTML = buildNoImageHTML();
             };
-
             imgWrap.appendChild(img);
-            card.appendChild(imgWrap);
+        } else {
+            imgWrap.innerHTML = buildNoImageHTML();
         }
+        card.appendChild(imgWrap);
 
         // Card body
         const body = document.createElement('div');
@@ -361,7 +424,9 @@
     // ---- Create Timeline Event ----
     function createTimelineEvent(event, index) {
         const el = document.createElement('div');
-        el.className = 'timeline-event';
+        el.className = 'timeline-event' + (state.category !== 'events' ? ' bio-event' : '');
+        el.setAttribute('role', 'article');
+        el.setAttribute('aria-label', (event.year || '') + ': ' + (event.text || '').substring(0, 80));
 
         const year = event.year;
         const currentYear = new Date().getFullYear();
@@ -401,10 +466,10 @@
         card.className = 'tl-card';
 
         // Image section
-        if (imgData) {
-            const imgWrap = document.createElement('div');
-            imgWrap.className = 'tl-card-img-wrap';
+        const imgWrap = document.createElement('div');
+        imgWrap.className = 'tl-card-img-wrap';
 
+        if (imgData) {
             const img = document.createElement('img');
             img.className = 'tl-card-img';
             img.src = imgData.url;
@@ -412,7 +477,7 @@
             img.loading = 'lazy';
             // Fallback if image fails
             img.onerror = function () {
-                this.parentElement.outerHTML = buildNoImageHTML();
+                this.parentElement.innerHTML = buildNoImageHTML();
             };
 
             imgWrap.appendChild(img);
@@ -424,11 +489,10 @@
                 caption.textContent = imgData.title;
                 imgWrap.appendChild(caption);
             }
-
-            card.appendChild(imgWrap);
         } else {
-            card.innerHTML += buildNoImageHTML();
+            imgWrap.innerHTML = buildNoImageHTML();
         }
+        card.appendChild(imgWrap);
 
         // Card body
         const body = document.createElement('div');
@@ -459,7 +523,7 @@
                             <polyline points="15 3 21 3 21 9"/>
                             <line x1="10" y1="14" x2="21" y2="3"/>
                         </svg>
-                        ${truncate(page.normalizedtitle || page.title, 32)}
+                        ${truncate(page.titles?.normalized || page.title, 32)}
                     `;
                     links.appendChild(a);
                 }
@@ -490,7 +554,7 @@
             if (orig && orig.source) {
                 return {
                     url: orig.source,
-                    title: page.normalizedtitle || page.title,
+                    title: page.titles?.normalized || page.title,
                     width: orig.width,
                     height: orig.height,
                 };
@@ -502,7 +566,7 @@
                 url = url.replace(/\/\d+px-/, '/640px-');
                 return {
                     url: url,
-                    title: page.normalizedtitle || page.title,
+                    title: page.titles?.normalized || page.title,
                     width: thumb.width,
                     height: thumb.height,
                 };
