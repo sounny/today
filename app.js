@@ -189,8 +189,6 @@
         const dateStr = `${monthName} ${state.day}`;
         dom.heroDate.textContent = dateStr;
         dom.headerSub.textContent = dateStr;
-
-        dom.headerSub.textContent = dateStr;
     }
 
     // ---- Loading / Error States ----
