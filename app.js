@@ -102,6 +102,12 @@
         buildSelectors();
         bindEvents();
         syncSelectorsToState();
+
+        // Initialize map panel (Phase 2)
+        if (typeof TodayMap !== 'undefined') {
+            TodayMap.init();
+        }
+
         fetchEvents();
     }
 
@@ -209,6 +215,9 @@
             state.data = cache[key];
             state.loading = false;
             renderTimeline(cache[key]);
+            if (typeof TodayMap !== 'undefined') {
+                TodayMap.update(cache[key]);
+            }
             return;
         }
 
@@ -228,6 +237,9 @@
             state.data = data;
             state.loading = false;
             renderTimeline(data);
+            if (typeof TodayMap !== 'undefined') {
+                TodayMap.update(data);
+            }
         } catch (error) {
             console.error('Failed to fetch events:', error);
             state.loading = false;
