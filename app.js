@@ -41,7 +41,6 @@
     const dom = {
         headerSub: document.getElementById('header-sub'),
         heroDate: document.getElementById('hero-date'),
-        heroSubtitle: document.getElementById('hero-subtitle'),
         monthSelect: document.getElementById('month-select'),
         daySelect: document.getElementById('day-select'),
         btnPrev: document.getElementById('btn-prev'),
@@ -148,7 +147,6 @@
         const map = { events: dom.navEvents, births: dom.navBirths, deaths: dom.navDeaths };
         map[cat].classList.add('active');
         dom.sectionTitle.textContent = CATEGORY_TITLES[cat];
-        dom.statTypeVal.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
 
         if (state.data) {
             renderTimeline(state.data);
@@ -297,11 +295,11 @@
         // Add Year info to hero body
         const yearWrap = document.createElement('div');
         yearWrap.className = 'hero-year-wrap';
-        yearWrap.innerHTML = \`
-            <span class="hero-year-num">\${year != null ? Math.abs(year) : '?'}</span>
-            \${year != null ? \`<span class="hero-year-era">\${year < 0 ? 'BCE' : 'CE'}</span>\` : ''}
-            \${yearsAgo != null && yearsAgo > 0 ? \`<span class="hero-years-ago">&bull; \${yearsAgo} yrs ago</span>\` : ''}
-        \`;
+        yearWrap.innerHTML = `
+            <span class="hero-year-num">${year != null ? Math.abs(year) : '?'}</span>
+            ${year != null ? `<span class="hero-year-era">${year < 0 ? 'BCE' : 'CE'}</span>` : ''}
+            ${yearsAgo != null && yearsAgo > 0 ? `<span class="hero-years-ago">&bull; ${yearsAgo} yrs ago</span>` : ''}
+        `;
         body.appendChild(yearWrap);
 
         const text = document.createElement('div');
@@ -319,14 +317,14 @@
                 a.href = page.content_urls?.desktop?.page || '#';
                 a.target = '_blank';
                 a.rel = 'noopener';
-                a.innerHTML = \`
-                    \${page.titles?.normalized || page.title}
+                a.innerHTML = `
+                    ${page.titles?.normalized || page.title}
                     <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                         <polyline points="15 3 21 3 21 9"></polyline>
                         <line x1="10" y1="14" x2="21" y2="3"></line>
                     </svg>
-                \`;
+                `;
                 links.appendChild(a);
             });
             body.appendChild(links);
